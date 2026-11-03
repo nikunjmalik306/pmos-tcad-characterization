@@ -145,13 +145,13 @@ The relationship is given by:
 $$V_{th} = V_{gs} \Big|_{I_d = I_{crit}}$$
 
 #### Aspect Ratio Normalization Formula:
-The critical current is typically normalized by the device's aspect ratio ($W/L$) to ensure a consistent definition across different device geometries. A common industry standard is to define $I_{crit}$ as:
+The critical current is normalized by the device's aspect ratio ($W/L$) to ensure a consistent definition across different device geometries. The standard threshold current pre-factor is defined as:
 
 ![Critical Current Formula](docs/figures/tcad_equation_icrit_normalization.png)
 
 $$I_{crit} = 10^{-7}\text{ A} \times \frac{W}{L}$$
 
-#### Exact Probing Calculations (from Report Page 7):
+#### Exact Probing Calculations:
 Assuming a normalized device width ($W$) of $1.0\ \mu\text{m}$, the target currents for probing the $I_d - V_{gs}$ curve are calculated as follows:
 
 ![Calculated Probing Target Currents](docs/figures/tcad_calculation_target_currents.png)
@@ -165,7 +165,7 @@ Assuming a normalized device width ($W$) of $1.0\ \mu\text{m}$, the target curre
 * **For $L = 300\text{ nm}$ ($0.30\ \mu\text{m}$):**
   $$I_{crit} = 10^{-7}\text{ A} \times \frac{1\ \mu\text{m}}{0.30\ \mu\text{m}} \approx 3.3 \times 10^{-7}\text{ A} = \mathbf{0.33\ \mu\text{A}}$$
 
-These calculated current values align closely with the values at which the curves were probed in the simulation software to extract the $V_{th}$ values presented in Table 2.
+These calculated current values align with the target current points probed on the $I_d-V_{gs}$ characteristics in Sentaurus Inspect to extract the $V_{th}$ values in Table 2.
 
 #### Comprehensive Calculations Card:
 ![Vth Extraction Methodology and Calculations Panel](docs/figures/tcad_vth_extraction_calculations.png)
@@ -175,16 +175,17 @@ These calculated current values align closely with the values at which the curve
 
 ### 4.4 Threshold Voltage Comparison & Extraction Curves
 
-By comparing the transfer characteristics ($I_d - V_{gs}$ plots) for all three devices, a clear trend emerges. The threshold voltage, the gate voltage required to form the inversion channel, decreases in magnitude as the channel length decreases. This phenomenon is known as **$V_{th}$ roll-off**, which is a key short-channel effect (SCE).
+By comparing the transfer characteristics ($I_d - V_{gs}$ plots) for all three devices, a clear trend emerges: the threshold voltage magnitude decreases as the channel length decreases. This phenomenon is known as **$V_{th}$ roll-off**, which is a key short-channel effect (SCE).
 
 ### Table 2: Extracted Threshold Voltage for Different Channel Lengths
-| Channel Length ($L$) | Aspect Ratio ($W/L$) | Critical Probing Current ($I_{crit}$) | Extracted Threshold Voltage ($V_{th}$) | Magnitude $|V_{th}|$ |
+
+| Channel Length ($L$) | Aspect Ratio ($W/L$) | Critical Probing Current ($I_{crit}$) | Extracted Threshold Voltage ($V_{th}$) | Magnitude $\|V_{th}\|$ |
 | :---: | :---: | :---: | :---: | :---: |
 | **$100\text{ nm}$** | 10.00 | $1.0\ \mu\text{A}$ ($1.0 \times 10^{-6}\text{ A}$) | **$-0.296\text{ V}$** | $0.296\text{ V}$ |
 | **$200\text{ nm}$** | 5.00 | $0.5\ \mu\text{A}$ ($5.0 \times 10^{-7}\text{ A}$) | **$-0.330\text{ V}$** | $0.330\text{ V}$ |
-| **$300\text{ nm}$** | 3.33 | $0.33\ \mu\text{A}$ ($3.3 \times 10^{-7}\text{ A}$) | **$-0.396\text{ V}$** (probed $-0.36\text{ V}$) | $0.396\text{ V}$ |
+| **$300\text{ nm}$** | 3.33 | $0.33\ \mu\text{A}$ ($3.3 \times 10^{-7}\text{ A}$) | **$-0.396\text{ V}$** | $0.396\text{ V}$ |
 
-#### Sentaurus Inspect Probing Extraction Curves (from Report Page 8):
+#### Sentaurus Inspect Probing Extraction Curves:
 
 ##### 1. Channel Length $L = 100\text{ nm}$ Probing Curve ($V_{th} = -0.296\text{ V}$):
 ![100nm Vth Probing Curve](docs/figures/tcad_vth_probe_100nm.png)
@@ -194,23 +195,26 @@ By comparing the transfer characteristics ($I_d - V_{gs}$ plots) for all three d
 ![200nm Vth Probing Curve](docs/figures/tcad_vth_probe_200nm.png)
 *Figure 8B: Sentaurus Inspect probe curve for L = 200nm pMOSFET showing Vth extraction at Icrit = 0.5 uA, yielding Vth = -0.330 V.*
 
-##### 3. Channel Length $L = 300\text{ nm}$ Probing Curve ($V_{th} = -0.360\text{ V}$ / $-0.396\text{ V}$):
+##### 3. Channel Length $L = 300\text{ nm}$ Probing Curve ($V_{th} = -0.396\text{ V}$):
 ![300nm Vth Probing Curve](docs/figures/tcad_vth_probe_300nm.png)
-*Figure 8C: Sentaurus Inspect probe curve for L = 300nm pMOSFET showing Vth extraction at Icrit = 0.33 uA, yielding Vth = -0.360 V / -0.396 V.*
+*Figure 8C: Sentaurus Inspect probe curve for L = 300nm pMOSFET showing Vth extraction at Icrit = 0.33 uA, yielding Vth = -0.396 V (measured coordinate: X = -0.3962 V).*
 
 ---
 
-### 4.5 Why This Happens: Short-Channel Effects
+### 4.5 Why This Happens: Short-Channel Effects (Charge Sharing & DIBL)
 
-The decrease in threshold voltage magnitude ($V_{th}$ becoming less negative from $-0.396\text{ V}$ down to $-0.296\text{ V}$) is caused by two fundamental short-channel mechanisms:
+The decrease in threshold voltage magnitude ($V_{th}$ becoming less negative from $-0.396\text{ V}$ down to $-0.296\text{ V}$) is physically explained by two primary short-channel mechanisms:
 
 #### 1. Depletion Charge Sharing:
-In a short channel (e.g., 100nm), the depletion regions from the source and drain metallurgical junctions (which are now physically very close together) "help" deplete the channel region. The gate electrode no longer has to support all the bulk depletion charge alone. Because the source and drain "share" the depletion charge, a **smaller (less negative) gate voltage** is needed to reach the surface inversion condition. Consequently, the threshold voltage magnitude decreases ($V_{th}$ roll-off).
+In a short channel (e.g., 100nm), the depletion regions associated with the source and drain metallurgical junctions (which are physically very close together) encroach significantly into the channel space-charge region. As a result, the gate electrode does not need to support all the bulk depletion charge alone. Because the source and drain junctions "share" in supporting this depletion charge, a **smaller (less negative) gate voltage** is sufficient to reach the surface inversion condition. Consequently, the threshold voltage magnitude decreases ($V_{th}$ roll-off).
 
 #### 2. Drain-Induced Barrier Lowering (DIBL):
-* In a short-channel device, the drain contact is situated so close to the source that its lateral electric field can directly penetrate into the channel and lower the potential energy barrier at the source junction.
-* For a pMOSFET, the negative drain voltage ($V_{ds}$) lowers the potential barrier for holes (the majority charge carriers in p-type inversion) trying to enter the channel from the source.
-* This "help" from the drain makes it significantly easier for the channel to invert, effectively reducing the magnitude of the gate voltage ($V_{gs}$) needed to turn the device ON. This effect becomes much stronger as $L$ decreases down to 100nm.
+* In a short-channel device, the close proximity of the drain enables its electric field lines to penetrate laterally toward the source and lower the electrostatic potential barrier for carrier injection (holes in pMOS) from the source into the channel.
+* This barrier reduction facilitates channel inversion at smaller $|V_{gs}|$ magnitudes, accentuating $V_{th}$ roll-off as channel length scales from 300nm down to 100nm.
+
+> [!NOTE]
+> **Physical Explanation Scope**:
+> Charge sharing and DIBL are presented here as qualitative physical explanations governing the observed $V_{th}$ roll-off. No quantitative DIBL coefficient ($\Delta V_{th} / \Delta V_{ds}$ in mV/V) was extracted in this study because transfer curves were evaluated at a single drain bias condition ($V_{ds} = -1.5\text{ V}$).
 
 ---
 
@@ -218,7 +222,7 @@ In a short channel (e.g., 100nm), the depletion regions from the source and drai
 
 This project successfully demonstrated the design and simulation of a p-channel MOSFET using TCAD tools. The fundamental DC and AC characteristics of a 100nm baseline device were analysed, confirming theoretical operational principles. The voltage-dependent nature of the internal capacitances ($C_{gg}, C_{gs}, C_{gd}, C_{ds}$) was clearly observed.
 
-The analysis of varying the channel length between the devices, while keeping the operating voltages, junction doping concentrations, gate oxide thickness ($10\text{ nm}$), and length of source and drain equal across all devices, was observed. As the channel length of a pMOSFET decreases, its threshold voltage ($V_{th}$) becomes less negative (from $-0.396\text{ V}$ down to $-0.296\text{ V}$). This phenomenon is a primary example of short-channel effects (SCEs).
+The analysis of varying the channel length between the devices, while keeping operating voltages, junction doping concentrations, gate oxide thickness ($10\text{ nm}$), and length of source and drain equal across all devices, was observed. As the channel length of a pMOSFET decreases, its threshold voltage ($V_{th}$) becomes less negative (from $-0.396\text{ V}$ at 300nm down to $-0.296\text{ V}$ at 100nm). This phenomenon is a primary example of short-channel effects (SCEs).
 
 This result underscores a fundamental trade-off in MOSFET scaling: while shrinking the channel length is key to improving performance and packing density, it also introduces detrimental effects like $V_{th}$ roll-off, which complicates device design and circuit stability. Managing these short-channel effects is a central focus of modern semiconductor technology development.
 
@@ -230,13 +234,18 @@ All simulation and extraction scripts are included in the `scripts/` directory:
 
 | Script File | Purpose | Description |
 | :--- | :--- | :--- |
-| [`sde_pmos.cmd`](scripts/sde_pmos.cmd) | Structure Generation | Sentaurus Structure Editor Scheme deck defining geometry, meshing, and doping |
-| [`sdevice_pmos.cmd`](scripts/sdevice_pmos.cmd) | TCAD Physics Solve | Sentaurus Device deck with Drift-Diffusion, Lombardi mobility, SRH/Auger models |
-| [`inspect.cmd`](scripts/inspect.cmd) | Inspect Post-Processing | Sentaurus Inspect command file extracting C-V curves and exporting CSV data |
-| [`extract_vth.py`](scripts/extract_vth.py) | Python Verification | Standalone standard library script implementing the Constant Current extraction method |
-| [`generate_circuit_diagram.py`](scripts/generate_circuit_diagram.py) | Circuit Diagram Generator | Generates publication-quality schematic and equivalent capacitance model figures |
+| [`scripts/sde_pmos.cmd`](scripts/sde_pmos.cmd) | Structure Generation | Sentaurus Structure Editor Scheme deck defining geometry, meshing, and doping |
+| [`scripts/sdevice_pmos.cmd`](scripts/sdevice_pmos.cmd) | TCAD Physics Solve | Sentaurus Device deck with Drift-Diffusion, Lombardi mobility, SRH/Auger models |
+| [`scripts/inspect.cmd`](scripts/inspect.cmd) | Inspect Post-Processing | Sentaurus Inspect command file extracting C-V curves and exporting CSV data |
+| [`scripts/extract_vth.py`](scripts/extract_vth.py) | Summary & Validation Script | Python utility calculating theoretical $I_{crit}$ values and formatting $V_{th}$ results extracted in Sentaurus Inspect |
+| [`scripts/generate_circuit_diagram.py`](scripts/generate_circuit_diagram.py) | Circuit Diagram Generator | Generates schematic and equivalent capacitance model figures |
 
-### Running the Python Verification Script:
+### Running the Python Summary & Validation Script:
+
+> [!NOTE]
+> **Threshold Extraction Workflow**:
+> The physical extraction of threshold voltages from simulated $I_d-V_{gs}$ characteristics was performed interactively in **Sentaurus Inspect** using the constant current method at target critical currents ($I_{crit}$). The script [`scripts/extract_vth.py`](scripts/extract_vth.py) serves as a standalone verification and formatting utility that calculates theoretical $I_{crit}$ values from aspect ratios and tabulates the inspected $V_{th}$ values. It does not parse raw TCAD simulation files directly.
+
 ```bash
 python3 scripts/extract_vth.py
 ```
@@ -252,6 +261,11 @@ Device / Channel   | I_crit Target    | Extracted Vth  | Status
 100nm pMOS         |    1.000 uA       |   -0.296 V     | Validated
 200nm pMOS         |    0.500 uA       |   -0.330 V     | Validated
 300nm pMOS         |    0.333 uA       |   -0.396 V     | Validated
+============================================================================
+Physical Insights:
+1. As channel length scales from 300nm -> 100nm, |Vth| decreases by ~100mV.
+2. This Vth roll-off confirms Short-Channel Effects (SCE): Charge Sharing
+   from source/drain depletion regions and Drain-Induced Barrier Lowering (DIBL).
 ============================================================================
 ```
 
