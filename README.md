@@ -51,7 +51,7 @@ This project involves the numerical simulation of a p-channel MOSFET to investig
 
 The p-channel MOSFET was designed and simulated using the **Synopsys Sentaurus TCAD** suite (`sde`, `sdevice`, `inspect`, and `svisual`). The device was constructed based on the parameters specified below:
 
-![2D MOSFET Mesh and Doping Profile](docs/figures/mosfet_2d_structure_mesh.png)
+![2D MOSFET Mesh and Doping Profile](docs/figures/tcad_mesh_2d_structure.png)
 *Figure 1: 2D p-MOSFET Sentaurus Visual structure mesh and net active doping concentration distribution.*
 
 ### Table 1: MOSFET Design and Simulation Parameters
@@ -75,7 +75,7 @@ The simulations involved DC sweeps of gate and drain voltages to obtain the tran
 
 To extract DC curves and dynamic small-signal admittance in TCAD, the transistor is biased according to the characterization circuit testbench:
 
-![Circuit Schematics and Small-Signal Equivalent Model](docs/figures/circuit_schematic.png)
+![Circuit Schematics and Small-Signal Equivalent Model](docs/figures/tcad_circuit_testbench_and_model.png)
 *Figure 2: (A) TCAD Simulation Testbench circuit for DC voltage sweeps and 1 MHz small-signal AC admittance probing. (B) High-frequency small-signal capacitance equivalent circuit model.*
 
 ### Testbench Operation & Biasing
@@ -95,7 +95,7 @@ The fundamental DC and AC characteristics were first analysed for the baseline d
 #### 4.1.1 AC (Capacitance) Characteristics (1 MHz)
 The AC characteristics reveal the internal capacitances of the MOSFET, which govern its high-frequency performance:
 
-![Figure 1: AC Characteristics Plots for Frequency of 1 MHz](docs/figures/ac_characteristics_1mhz.png)
+![Figure 1: AC Characteristics Plots for Frequency of 1 MHz](docs/figures/tcad_ac_admittance_1mhz.png)
 *Figure 3: AC Characteristics Plots for Frequency of 1 MHz (Plot 1: Cgg, Plots 2 & 3: Cgd and Cgs, Plot 5: Cds).*
 
 * **Plot 1: Total Gate Capacitance ($C_{gg}$):** Shows the classic C-V curve. It is high when the device is OFF (accumulation region, $V_{gs} > 0\text{ V}$, where majority electrons accumulate at the interface yielding $C_{gg} \approx C_{ox}$) and ON (inversion region, $V_{gs} < V_{th}$, where mobile inversion holes form the channel), but dips in the transition (depletion) region where the depletion space-charge layer acts in series with oxide capacitance.
@@ -106,7 +106,7 @@ The AC characteristics reveal the internal capacitances of the MOSFET, which gov
 
 #### 4.1.2 DC Characteristics
 
-![Figure 2: DC Characteristics Plots (left – IdVd, right – IdVg)](docs/figures/dc_characteristics_idvd_idvg.png)
+![Figure 2: DC Characteristics Plots (left – IdVd, right – IdVg)](docs/figures/tcad_dc_transfer_output_curves.png)
 *Figure 4: DC Characteristics Plots (Left: Output characteristics Id-Vd; Right: Transfer characteristics Id-Vg).*
 
 ##### Id–Vg Characteristics (Transfer Characteristics)
@@ -125,10 +125,10 @@ The smooth transition from linear to saturation behaviour indicates proper chann
 
 To study the effects of changing channel length, simulations were repeated under identical doping profiles and oxide conditions for devices with $L = 200\text{ nm}$ and $L = 300\text{ nm}$. The results are presented below:
 
-![Figure 2: Simulation results for L = 200nm MOSFET](docs/figures/simulation_results_200nm.png)
+![Figure 2: Simulation results for L = 200nm MOSFET](docs/figures/tcad_scaling_dashboard_200nm.png)
 *Figure 5: Sentaurus Visual simulation results dashboard for L = 200nm MOSFET (2D mesh, Id-Vd, Id-Vg, and AC capacitance curves).*
 
-![Figure 3: Simulation results for L = 300nm MOSFET](docs/figures/simulation_results_300nm.png)
+![Figure 3: Simulation results for L = 300nm MOSFET](docs/figures/tcad_scaling_dashboard_300nm.png)
 *Figure 6: Sentaurus Visual simulation results dashboard for L = 300nm MOSFET (2D mesh, Id-Vd, Id-Vg, and AC capacitance curves).*
 
 ---
@@ -140,21 +140,21 @@ The threshold voltage ($V_{th}$) is a critical parameter that defines the gate v
 #### Definition Formula:
 The relationship is given by:
 
-![Threshold Voltage Definition Formula](docs/figures/equation_vth_definition.png)
+![Threshold Voltage Definition Formula](docs/figures/tcad_equation_vth_definition.png)
 
 $$V_{th} = V_{gs} \Big|_{I_d = I_{crit}}$$
 
 #### Aspect Ratio Normalization Formula:
 The critical current is typically normalized by the device's aspect ratio ($W/L$) to ensure a consistent definition across different device geometries. A common industry standard is to define $I_{crit}$ as:
 
-![Critical Current Formula](docs/figures/equation_icrit_normalization.png)
+![Critical Current Formula](docs/figures/tcad_equation_icrit_normalization.png)
 
 $$I_{crit} = 10^{-7}\text{ A} \times \frac{W}{L}$$
 
 #### Exact Probing Calculations (from Report Page 7):
 Assuming a normalized device width ($W$) of $1.0\ \mu\text{m}$, the target currents for probing the $I_d - V_{gs}$ curve are calculated as follows:
 
-![Calculated Probing Target Currents](docs/figures/calculation_target_currents.png)
+![Calculated Probing Target Currents](docs/figures/tcad_calculation_target_currents.png)
 
 * **For $L = 100\text{ nm}$ ($0.10\ \mu\text{m}$):**
   $$I_{crit} = 10^{-7}\text{ A} \times \frac{1\ \mu\text{m}}{0.10\ \mu\text{m}} = 1.0 \times 10^{-6}\text{ A} = \mathbf{1.0\ \mu\text{A}}$$
@@ -168,7 +168,7 @@ Assuming a normalized device width ($W$) of $1.0\ \mu\text{m}$, the target curre
 These calculated current values align closely with the values at which the curves were probed in the simulation software to extract the $V_{th}$ values presented in Table 2.
 
 #### Comprehensive Calculations Card:
-![Vth Extraction Methodology and Calculations Panel](docs/figures/vth_extraction_calculations_panel.png)
+![Vth Extraction Methodology and Calculations Panel](docs/figures/tcad_vth_extraction_calculations.png)
 *Figure 7: Summary card of constant current method formulas, step-by-step arithmetic, target probing currents, and extracted threshold voltages.*
 
 ---
@@ -187,15 +187,15 @@ By comparing the transfer characteristics ($I_d - V_{gs}$ plots) for all three d
 #### Sentaurus Inspect Probing Extraction Curves (from Report Page 8):
 
 ##### 1. Channel Length $L = 100\text{ nm}$ Probing Curve ($V_{th} = -0.296\text{ V}$):
-![100nm Vth Probing Curve](docs/figures/vth_probe_curve_100nm.png)
+![100nm Vth Probing Curve](docs/figures/tcad_vth_probe_100nm.png)
 *Figure 8A: Sentaurus Inspect probe curve for L = 100nm pMOSFET showing Vth extraction at Icrit = 1.0 uA, yielding Vth = -0.296 V.*
 
 ##### 2. Channel Length $L = 200\text{ nm}$ Probing Curve ($V_{th} = -0.330\text{ V}$):
-![200nm Vth Probing Curve](docs/figures/vth_probe_curve_200nm.png)
+![200nm Vth Probing Curve](docs/figures/tcad_vth_probe_200nm.png)
 *Figure 8B: Sentaurus Inspect probe curve for L = 200nm pMOSFET showing Vth extraction at Icrit = 0.5 uA, yielding Vth = -0.330 V.*
 
 ##### 3. Channel Length $L = 300\text{ nm}$ Probing Curve ($V_{th} = -0.360\text{ V}$ / $-0.396\text{ V}$):
-![300nm Vth Probing Curve](docs/figures/vth_probe_curve_300nm.png)
+![300nm Vth Probing Curve](docs/figures/tcad_vth_probe_300nm.png)
 *Figure 8C: Sentaurus Inspect probe curve for L = 300nm pMOSFET showing Vth extraction at Icrit = 0.33 uA, yielding Vth = -0.360 V / -0.396 V.*
 
 ---
