@@ -1,0 +1,22 @@
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# TCAD / Simulation temporary and log files
+*.log
+*.out
+*.tmp
+*.bak
+*~
+*.plt
+*.tdr
+*.msh
+*.grd
+*.bnd
+__pycache__/
+*.py[cod]
