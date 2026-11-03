@@ -1,225 +1,247 @@
-# Sub-Micron p-Channel MOSFET Design, Characterization & Scaling Analysis
-### Numerical TCAD Simulation of DC/AC Characteristics, Gate Capacitances, and Short-Channel Effects (100nm – 300nm) using Synopsys Sentaurus
+# Design and Characterization of a p-Channel MOSFET
+### Analysis of DC and AC Characteristics and the Impact of Channel Length Scaling (100nm – 300nm) using Synopsys Sentaurus TCAD
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![TCAD: Synopsys Sentaurus](https://img.shields.io/badge/TCAD-Synopsys%20Sentaurus-red.svg)](https://www.synopsys.com/silicon/tcad.html)
+[![Author: Nikunj Malik](https://img.shields.io/badge/Author-Nikunj%20Malik%20(230959134)-blueviolet.svg)](#author)
 [![Domain: Device Physics](https://img.shields.io/badge/Domain-Semiconductor%20Device%20Physics-orange.svg)](#)
-[![Python: Verification](https://img.shields.io/badge/Python-Automation%20%26%20Extraction-green.svg)](scripts/extract_vth.py)
-[![Author: Nikunj Malik](https://img.shields.io/badge/Author-Nikunj%20Malik-blueviolet.svg)](#author)
 
 ---
 
-## Executive Summary & Objectives
+## Abstract
 
-This project presents a comprehensive 2D numerical device simulation and semiconductor physics investigation of a sub-micron p-channel Metal-Oxide-Semiconductor Field-Effect Transistor (**p-MOSFET**) using the industry-standard **Synopsys Sentaurus TCAD** suite (`sde`, `sdevice`, `inspect`, and `svisual`).
+This project presents the design and simulation of a p-channel Metal-Oxide-Semiconductor Field-Effect Transistor (**p-MOSFET**) using industry-standard **Synopsys Sentaurus TCAD** software. The study focuses on two primary objectives:
 
-The study focuses on two primary objectives:
-1. **Device Characterization (Baseline $L = 100\text{ nm}$):**
-   * **DC Operation:** Mapping transfer characteristics ($I_d-V_{gs}$) and output characteristics ($I_d-V_{ds}$) to examine subthreshold behavior, linear ohmic conduction, and saturation.
-   * **AC Small-Signal Behavior (1 MHz):** Extracting voltage-dependent gate admittance and terminal capacitances ($C_{gg}, C_{gs}, C_{gd}, C_{ds}$) across accumulation, depletion, and strong inversion regimes.
-2. **Channel Length Scaling & Short-Channel Effects (SCEs):**
-   * Evaluating geometric scaling across $100\text{ nm}$, $200\text{ nm}$, and $300\text{ nm}$ channel lengths while keeping gate oxide thickness ($t_{ox} = 10\text{ nm}$), substrate doping, and source/drain doping uniform.
-   * Quantifying **Threshold Voltage ($V_{th}$) Roll-Off** using the standardized **Constant Current Method** ($I_{crit} = 10^{-7} \times \frac{W}{L}$).
-   * Analyzing underlying physical degradation mechanisms: **Depletion Charge Sharing** and **Drain-Induced Barrier Lowering (DIBL)**.
+1. **Baseline Characterization ($L = 100\text{ nm}$):** Characterizing fundamental Direct Current (DC) and Alternating Current (AC) behaviors of a baseline device with a 100nm channel length.
+2. **Channel Length Scaling Analysis:** Analyzing the impact of channel length scaling on the device's DC performance and threshold voltage across channel lengths of **100nm, 200nm, and 300nm**.
+
+The results demonstrate classic MOSFET transfer and output characteristics. AC analysis reveals the voltage-dependent nature of internal gate capacitances ($C_{gg}, C_{gs}, C_{gd}, C_{ds}$), which are crucial for high-frequency applications. The channel length scaling analysis confirms key short-channel effects, most notably **threshold voltage ($V_{th}$) roll-off**. These findings are critical for understanding the trade-offs involved in modern semiconductor device scaling.
 
 ---
 
-## Device Architecture & Specifications
+## Contents
+* [1. Introduction](#1-introduction)
+* [2. Device Structure and Simulation Setup](#2-device-structure-and-simulation-setup)
+* [3. Circuit Schematics & Testbench Configurations](#3-circuit-schematics--testbench-configurations)
+* [4. Results and Discussion](#4-results-and-discussion)
+  * [4.1 Characteristics of the Baseline 100nm MOSFET](#41-characteristics-of-the-baseline-100nm-mosfet)
+    * [4.1.1 AC (Capacitance) Characteristics (1 MHz)](#411-ac-capacitance-characteristics-1-mhz)
+    * [4.1.2 DC Characteristics (Transfer & Output Curves)](#412-dc-characteristics)
+  * [4.2 Impact of Varying Channel Length (200nm & 300nm)](#42-impact-of-varying-channel-length)
+  * [4.3 Threshold Voltage Extraction Method & Detailed Calculations](#43-threshold-voltage-extraction-method--detailed-calculations)
+  * [4.4 Threshold Voltage Comparison & Extraction Curves](#44-threshold-voltage-comparison--extraction-curves)
+  * [4.5 Why This Happens: Short-Channel Effects (Charge Sharing & DIBL)](#45-why-this-happens-short-channel-effects)
+* [5. Conclusion](#5-conclusion)
+* [6. Verification Scripts & TCAD Decks](#6-verification-scripts--tcad-decks)
+* [7. Author](#7-author)
 
-The 2D device structure features an n-type bulk silicon substrate with heavily doped p-type source and drain extension regions, separated by a thermally grown silicon dioxide ($\text{SiO}_2$) gate insulator.
+---
 
-<p align="center">
-  <img src="docs/figures/mosfet_2d_structure_mesh.png" alt="2D MOSFET Mesh and Doping Profile" width="700"/>
-  <br>
-  <em>Figure 1: 2D p-MOSFET Sentaurus Visual structure mesh and net active doping concentration distribution ($N_D = 10^{16}\ \text{cm}^{-3}$ n-substrate, $N_A = 5 \times 10^{19}\ \text{cm}^{-3}$ p+ source/drain).</em>
-</p>
+## 1. Introduction
 
-### Table 1: MOSFET Design & Simulation Parameters
-| Parameter | Symbol | Value | Unit | Description / Physical Role |
+The Metal-Oxide-Semiconductor Field-Effect Transistor (MOSFET) is the fundamental building block of modern digital electronics, from microprocessors to memory chips. Its ability to act as a highly efficient switch has enabled the exponential growth in computing power described by Moore’s Law. The principle of operation relies on modulating the conductivity of a semiconductor channel between two terminals (source and drain) by applying a voltage to a third, insulated terminal (the gate).
+
+This project involves the numerical simulation of a p-channel MOSFET to investigate its electrical characteristics. The analysis is divided into two parts:
+1. **Device Characterization:** A thorough examination of the DC transfer ($I_d-V_{gs}$) and output ($I_d-V_{ds}$) characteristics, as well as the AC capacitance-voltage ($C-V$) profiles for a baseline 100nm device.
+2. **Scaling Analysis:** An investigation into the effects of reducing the channel length ($L$) on device performance, specifically focusing on changes in threshold voltage ($V_{th}$) and drain current ($I_d$). This is crucial as device scaling into the nanometer regime introduces significant physical phenomena known as Short-Channel Effects (SCEs).
+
+---
+
+## 2. Device Structure and Simulation Setup
+
+The p-channel MOSFET was designed and simulated using the **Synopsys Sentaurus TCAD** suite (`sde`, `sdevice`, `inspect`, and `svisual`). The device was constructed based on the parameters specified below:
+
+![2D MOSFET Mesh and Doping Profile](docs/figures/mosfet_2d_structure_mesh.png)
+*Figure 1: 2D p-MOSFET Sentaurus Visual structure mesh and net active doping concentration distribution.*
+
+### Table 1: MOSFET Design and Simulation Parameters
+| Parameter | Symbol | Value | Unit | Description |
 | :--- | :---: | :---: | :---: | :--- |
-| **Device Type** | -- | p-channel MOSFET | -- | Inversion-mode hole carrier transistor |
-| **Channel Length** | $L$ | **100, 200, 300** | $\text{nm}$ | Evaluated sub-micron gate lengths |
-| **Device Width** | $W$ | 1.0 | $\mu\text{m}$ | Normalized device width for current scaling |
-| **Gate Oxide Thickness** | $t_{ox}$ | 10 | $\text{nm}$ | Thermally grown $\text{SiO}_2$ dielectric insulator |
-| **Substrate (Body) Doping** | $N_D$ | $1.0 \times 10^{16}$ | $\text{cm}^{-3}$ | Uniform n-type Phosphorus concentration |
-| **Source / Drain Doping** | $N_A$ | $5.0 \times 10^{19}$ | $\text{cm}^{-3}$ | Degenerate p-type Boron concentration |
-| **Gate Work Function** | $\Phi_m$ | 4.80 | $\text{eV}$ | Tuned mid-gap metal gate electrode |
-| **AC Small-Signal Frequency**| $f$ | 1.0 | $\text{MHz}$ | Small-signal admittance analysis frequency ($\omega = 2\pi \times 10^6\ \text{rad/s}$) |
-| **Small-Signal Amplitude** | $v_{ac}$ | 10 | $\text{mV}$ | AC perturbation voltage |
-| **Ambient Temperature** | $T$ | 300 | $\text{K}$ | Standard room temperature operating condition |
+| **Device Type** | -- | **p-channel MOSFET** | -- | Inversion-mode hole carrier transistor |
+| **Channel Length** | $L$ | **100nm, 200nm, 300nm** | $\text{nm}$ | Evaluated sub-micron gate lengths |
+| **Device Width** | $W$ | **1.0** | $\mu\text{m}$ | Normalized device width for current scaling |
+| **Gate Oxide Thickness** | $t_{ox}$ | **10** | $\text{nm}$ | Thermally grown $\text{SiO}_2$ dielectric insulator |
+| **Substrate (Body) Doping** | $N_D$ (n-type) | **$1 \times 10^{16}$** | $\text{cm}^{-3}$ | Uniform n-type Phosphorus concentration |
+| **Source/Drain Doping** | $N_A$ (p-type) | **$5 \times 10^{19}$** | $\text{cm}^{-3}$ | Degenerate p-type Boron concentration |
+| **Gate Work Function** | $\Phi_m$ | **4.80** | $\text{eV}$ | Tuned mid-gap metal gate electrode |
+| **AC Small-Signal Frequency** | $f$ | **1.0** | $\text{MHz}$ | Admittance analysis frequency |
+| **Operating Temperature** | $T$ | **300** | $\text{K}$ | Standard room temperature operating condition |
+
+The simulations involved DC sweeps of gate and drain voltages to obtain the transfer and output curves. For the AC analysis, a small-signal analysis was performed at a frequency of 1 MHz.
 
 ---
 
-## Circuit Schematics & Simulation Setup
+## 3. Circuit Schematics & Testbench Configurations
 
-To simulate both static DC characteristics and high-frequency dynamic AC admittance, the device was connected in a dedicated TCAD simulation circuit testbench.
+To extract DC curves and dynamic small-signal admittance in TCAD, the transistor is biased according to the characterization circuit testbench:
 
-<p align="center">
-  <img src="docs/figures/circuit_schematic.png" alt="p-MOSFET Characterization and Capacitance Circuits" width="880"/>
-  <br>
-  <em>Figure 2: (A) TCAD Simulation Testbench circuit for DC voltage sweeps and 1 MHz small-signal AC admittance probing. (B) High-frequency small-signal capacitance equivalent circuit model showing terminal capacitances ($C_{gs}, C_{gd}, C_{ds}, C_{gb}, C_{db}, C_{sb}$).</em>
-</p>
+![Circuit Schematics and Small-Signal Equivalent Model](docs/figures/circuit_schematic.png)
+*Figure 2: (A) TCAD Simulation Testbench circuit for DC voltage sweeps and 1 MHz small-signal AC admittance probing. (B) High-frequency small-signal capacitance equivalent circuit model.*
 
-### Circuit Configurations & Terminal Connectivity
-
-#### 1. DC & AC Simulation Testbench Circuit (Figure 2A)
-* **Source (S) Terminal:** Tied to reference ground ($V_S = 0.0\text{ V}$).
-* **Substrate / Bulk (B) Terminal:** Tied directly to the source terminal ($V_B = V_S = 0.0\text{ V}$) ensuring zero substrate body bias ($V_{BS} = 0\text{ V}$) to prevent extraneous body effect shifts.
-* **Drain (D) Terminal:** Connected to a variable DC voltage supply ($V_{DS}$) through an ammeter ($I_D$) to measure channel current. Swept from $0.0\text{ V}$ down to $-1.5\text{ V}$.
-* **Gate (G) Terminal:** Connected to a compound excitation network consisting of a variable DC gate bias ($V_{GS}$, swept from $0.0\text{ V}$ down to $-1.5\text{ V}$) superposed with a small-signal AC voltage source ($v_{ac} = 10\text{ mV}$ sinusoidal at $f = 1\text{ MHz}$).
-
-#### 2. High-Frequency Small-Signal Capacitance Equivalent Circuit (Figure 2B)
-In Sentaurus Device, small-signal AC analysis solves the linearized complex admittance matrix $Y(\omega) = G(\omega) + j\omega C(\omega)$:
-* **Gate-to-Source Capacitance ($C_{gs}$):** Composed of gate-to-source metallurgical overlap capacitance ($C_{ov}$) plus the forward portion of the channel inversion charge.
-* **Gate-to-Drain Capacitance ($C_{gd}$):** Composed of gate-to-drain overlap capacitance plus the drain-end channel inversion charge.
-* **Gate-to-Bulk Capacitance ($C_{gb}$):** Dominates in the accumulation regime where majority electrons accumulate at the $\text{Si}/\text{SiO}_2$ interface.
-* **Drain-to-Source Capacitance ($C_{ds}$):** Small parasitic capacitance between source and drain diffusions.
-* **Total Gate Capacitance ($C_{gg}$):**
-  $$C_{gg} = C_{gs} + C_{gd} + C_{gb} = \frac{\partial Q_{gate}}{\partial V_{gs}}$$
-
-```
-                      +-------------------+
-                      |      Gate (G)     |
-                      +---+-----------+---+
-                          |           |
-                        [Cgs]       [Cgd]
-                          |           |
-      +-------------------+           +-------------------+
-      |   Source (S)      |<---[Cds]-->|     Drain (D)     |
-      +---+---------------+           +---+---------------+
-          |       |                       |       |
-        [Csb]    GND                    [Cdb]  (Ammeter)
-          |                               |       |
-      +---+-------------------------------+--+  [Vds]
-      |              Body / Bulk (B)          |   |
-      +---------------------------------------+  GND
-```
+### Testbench Operation & Biasing
+* **DC Sweeps:** The Source and Body are grounded ($V_S = V_B = 0\text{ V}$), preventing unwanted body-effect threshold shifts. Drain voltage ($V_{DS}$) is swept from $0\text{ V}$ down to $-1.5\text{ V}$ through ammeter $I_D$. Gate voltage ($V_{GS}$) is independently biased and swept from $0\text{ V}$ down to $-1.5\text{ V}$.
+* **Small-Signal AC Admittance (1 MHz):** A small sinusoidal perturbation ($v_{ac} = 10\text{ mV}$ at $1\text{ MHz}$) is superposed at the gate electrode. The resulting terminal AC currents yield the admittance matrix:
+  $$Y_{ij} = G_{ij} + j\omega C_{ij} \quad (\omega = 2\pi \times 10^6\ \text{rad/s})$$
+* **Small-Signal Equivalent Circuit:** Internal capacitive components ($C_{gs}, C_{gd}, C_{ds}, C_{gb}$) govern transient switching speeds and high-frequency gain.
 
 ---
 
-## TCAD Numerical Physics Models
+## 4. Results and Discussion
 
-The physical transport and electrostatic phenomena were solved self-consistently in **Sentaurus Device (`sdevice`)** by coupling non-linear partial differential equations:
-* **Carrier Transport:** Drift-Diffusion transport coupled self-consistently with Poisson's equation and hole/electron continuity equations.
-* **Inversion-Layer Mobility Modeling:**
-  * *Lombardi Surface Model (`Enormal`):* Incorporates acoustic surface phonon scattering and surface roughness degradation at the $\text{Si}/\text{SiO}_2$ boundary.
-  * *High-Field Velocity Saturation:* Solves carrier velocity saturation under high tangential electric fields at the drain end.
-* **Generation & Recombination:** Doping-dependent Shockley-Read-Hall (SRH) recombination combined with Auger recombination.
-* **Carrier Statistics:** Fermi-Dirac statistics for accurate modeling of degenerate carrier populations in the source/drain diffusions.
+### 4.1 Characteristics of the Baseline 100nm MOSFET
 
----
+The fundamental DC and AC characteristics were first analysed for the baseline device with a channel length $L = 100\text{ nm}$.
 
-## Results & Discussion
+#### 4.1.1 AC (Capacitance) Characteristics (1 MHz)
+The AC characteristics reveal the internal capacitances of the MOSFET, which govern its high-frequency performance:
 
-### 1. High-Frequency AC Gate Capacitance Characteristics (1 MHz)
+![Figure 1: AC Characteristics Plots for Frequency of 1 MHz](docs/figures/ac_characteristics_1mhz.png)
+*Figure 3: AC Characteristics Plots for Frequency of 1 MHz (Plot 1: Cgg, Plots 2 & 3: Cgd and Cgs, Plot 5: Cds).*
 
-Dynamic admittance analysis was performed at $1\text{ MHz}$ to extract terminal capacitances as a function of gate bias $V_{gs}$ for the baseline $100\text{ nm}$ p-MOSFET.
-
-<p align="center">
-  <img src="docs/figures/ac_characteristics_1mhz.png" alt="AC Capacitance Curves at 1 MHz" width="750"/>
-  <br>
-  <em>Figure 3: 1 MHz AC capacitance profiles for 100nm p-MOSFET: Plot 1: Total Gate Capacitance (Cgg), Plot 2 & 3: Gate-Source (Cgs) and Gate-Drain (Cgd), Plot 5: Drain-Source Capacitance (Cds).</em>
-</p>
-
-#### Operational Regimes:
-1. **Accumulation Region ($V_{gs} > 0\text{ V}$):** Positive gate voltage attracts majority carrier electrons to the silicon surface. The total gate capacitance $C_{gg}$ is high and approaches the oxide capacitance $C_{ox} = \frac{\epsilon_{ox}}{t_{ox}}$.
-2. **Depletion Region ($V_{gs} \approx 0\text{ V}$ to $-0.3\text{ V}$):** As $V_{gs}$ becomes slightly negative, majority carriers are repelled, creating an insulating space-charge depletion layer of depth $W_{dep}$. The depletion capacitance acts in series with $C_{ox}$, resulting in the characteristic **capacitance dip**:
-   $$C_{gg} = \frac{C_{ox} C_{dep}}{C_{ox} + C_{dep}} < C_{ox}$$
-3. **Strong Inversion Region ($V_{gs} < V_{th}$):** When $V_{gs}$ exceeds the threshold voltage negatively, mobile minority holes form a continuous conductive channel beneath the oxide. $C_{gg}$ rises back up to the oxide limit.
-4. **Terminal Partitions ($C_{gs}, C_{gd}, C_{ds}$):**
-   * In the OFF state, $C_{gs}$ and $C_{gd}$ remain small, limited strictly to parasitic metallurgical overlap capacitance.
-   * Once the inversion layer forms, $C_{gs}$ and $C_{gd}$ rise symmetrically to equal fractions of the inversion channel capacitance.
-   * The drain-source capacitance $C_{ds}$ remains very small and flat across the entire voltage sweep, confirming excellent junction isolation.
+* **Plot 1: Total Gate Capacitance ($C_{gg}$):** Shows the classic C-V curve. It is high when the device is OFF (accumulation region, $V_{gs} > 0\text{ V}$, where majority electrons accumulate at the interface yielding $C_{gg} \approx C_{ox}$) and ON (inversion region, $V_{gs} < V_{th}$, where mobile inversion holes form the channel), but dips in the transition (depletion) region where the depletion space-charge layer acts in series with oxide capacitance.
+* **Plot 2 & 3: Gate-Source / Gate-Drain ($C_{gs}, C_{gd}$):** These are low when the device is OFF (limited strictly to parasitic metallurgical overlap capacitance). They rise symmetrically to a high value when the device is ON as the inversion channel forms and connects source and drain.
+* **Plot 5: Drain-Source Capacitance ($C_{ds}$):** This capacitance is very low and relatively flat across the gate sweep. It is a small parasitic junction capacitance and is not the main component.
 
 ---
 
-### 2. Static DC Transfer ($I_d-V_{gs}$) & Output ($I_d-V_{ds}$) Characteristics
+#### 4.1.2 DC Characteristics
 
-DC sweeps were performed to map linear and saturation operating boundaries.
+![Figure 2: DC Characteristics Plots (left – IdVd, right – IdVg)](docs/figures/dc_characteristics_idvd_idvg.png)
+*Figure 4: DC Characteristics Plots (Left: Output characteristics Id-Vd; Right: Transfer characteristics Id-Vg).*
 
-<p align="center">
-  <img src="docs/figures/dc_transfer_output_curves.png" alt="DC Transfer and Output Curves" width="750"/>
-  <br>
-  <em>Figure 4: Sentaurus Visual DC characteristic curves for 100nm p-MOSFET: (Left) Output characteristics Id-Vds; (Right) Transfer characteristics Id-Vgs.</em>
-</p>
+##### Id–Vg Characteristics (Transfer Characteristics)
+The $I_d–V_g$ plot shows the drain current variation with respect to the gate voltage ($V_g$) at a fixed drain voltage ($V_d$). The magnitude of the drain current increases as the gate voltage becomes more negative. When the gate voltage is near $0\text{ V}$, the transistor is in the OFF region with only a small leakage current. As $V_g$ moves beyond the threshold voltage ($V_{th}$) in the negative direction, the device enters strong inversion, causing a rapid increase in drain current.
 
-* **Transfer Characteristics ($I_d-V_{gs}$ at fixed $V_{ds}$):**
-  * When $V_{gs} \approx 0\text{ V}$, the device is OFF with negligible subthreshold leakage current.
-  * As $V_{gs}$ crosses the threshold voltage ($V_{th} = -0.296\text{ V}$) in the negative direction, the channel enters strong inversion, driving a steep increase in drain current that transitions smoothly into quadratic saturation.
-* **Output Characteristics ($I_d-V_{ds}$ at constant $V_{gs}$):**
-  * **Linear (Ohmic) Region:** At low $|V_{ds}|$, current increases linearly with drain voltage where channel resistance dominates:
-    $$I_d \approx \mu_p C_{ox} \frac{W}{L} \left[(V_{gs} - V_{th})V_{ds} - \frac{V_{ds}^2}{2}\right]$$
-  * **Saturation Region:** As $|V_{ds}|$ increases beyond $|V_{gs} - V_{th}|$, the channel pinches off at the drain end, and carrier velocity saturation causes $I_d$ to flatten into a constant current plateau.
+The plot exhibits the typical PMOS transfer behaviour, where the curve rises and gradually saturates, indicating the transition from linear to saturation regions of operation. This confirms proper gate control over the channel and a clear PMOS turn-on characteristic when $V_{GS}$ becomes sufficiently negative.
+
+##### Id–Vd Characteristics (Output Characteristics)
+The $I_d–V_d$ plot shows the dependence of drain current on drain voltage ($V_d$) for a constant gate voltage. Initially, the current increases almost linearly with $V_d$, representing the ohmic (linear) region, where channel resistance dominates. As the magnitude of $V_d$ increases further, the curve begins to flatten out, showing that the device has entered the saturation region, where the drain current becomes nearly constant and is primarily controlled by the gate voltage.
+
+The smooth transition from linear to saturation behaviour indicates proper channel formation and expected PMOS output operation, where the drain current saturates for larger $|V_{DS}|$.
 
 ---
 
-### 3. Channel Length Scaling Analysis ($100\text{ nm}$, $200\text{ nm}$, $300\text{ nm}$)
+### 4.2 Impact of Varying Channel Length
 
-Simulations were repeated under identical doping and oxide conditions for channel lengths $L = 200\text{ nm}$ and $L = 300\text{ nm}$.
+To study the effects of changing channel length, simulations were repeated under identical doping profiles and oxide conditions for devices with $L = 200\text{ nm}$ and $L = 300\text{ nm}$. The results are presented below:
 
-<p align="center">
-  <img src="docs/figures/simulation_results_200nm.png" alt="200nm Simulation Results" width="440"/>
-  &nbsp;&nbsp;&nbsp;&nbsp;
-  <img src="docs/figures/simulation_results_300nm.png" alt="300nm Simulation Results" width="440"/>
-  <br>
-  <em>Figure 5: Sentaurus Visual multi-panel simulation dashboards for L = 200nm (left) and L = 300nm (right), displaying 2D mesh, Id-Vd, Id-Vg, and high-frequency capacitance curves.</em>
-</p>
+![Figure 2: Simulation results for L = 200nm MOSFET](docs/figures/simulation_results_200nm.png)
+*Figure 5: Sentaurus Visual simulation results dashboard for L = 200nm MOSFET (2D mesh, Id-Vd, Id-Vg, and AC capacitance curves).*
+
+![Figure 3: Simulation results for L = 300nm MOSFET](docs/figures/simulation_results_300nm.png)
+*Figure 6: Sentaurus Visual simulation results dashboard for L = 300nm MOSFET (2D mesh, Id-Vd, Id-Vg, and AC capacitance curves).*
 
 ---
 
-## Threshold Voltage ($V_{th}$) Extraction & Short-Channel Effects
+### 4.3 Threshold Voltage Extraction Method & Detailed Calculations
 
-### Constant Current Method
-To extract the threshold voltage objectively and eliminate ambiguities from transconductance variations, the industry-standard **Constant Current Method** was utilized:
+The threshold voltage ($V_{th}$) is a critical parameter that defines the gate voltage required to turn the transistor "ON". In this analysis, the **Constant Current Method** was employed. This method defines the threshold voltage as the gate-source voltage ($V_{gs}$) at which the drain current ($I_d$) reaches a specific, predefined critical value ($I_{crit}$).
 
-$$I_{crit} = 10^{-7} \times \frac{W}{L}\quad \text{[Amperes]}$$
+#### Definition Formula:
+The relationship is given by:
+
+![Threshold Voltage Definition Formula](docs/figures/equation_vth_definition.png)
 
 $$V_{th} = V_{gs} \Big|_{I_d = I_{crit}}$$
 
-With a standardized device width $W = 1.0\ \mu\text{m}$:
-* **For $L = 100\text{ nm}$:** $I_{crit} = 10^{-7} \times \frac{1.0\ \mu\text{m}}{0.10\ \mu\text{m}} = 1.0 \times 10^{-6}\text{ A} = \mathbf{1.00\ \mu\text{A}}$
-* **For $L = 200\text{ nm}$:** $I_{crit} = 10^{-7} \times \frac{1.0\ \mu\text{m}}{0.20\ \mu\text{m}} = 5.0 \times 10^{-7}\text{ A} = \mathbf{0.50\ \mu\text{A}}$
-* **For $L = 300\text{ nm}$:** $I_{crit} = 10^{-7} \times \frac{1.0\ \mu\text{m}}{0.30\ \mu\text{m}} \approx 3.3 \times 10^{-7}\text{ A} = \mathbf{0.33\ \mu\text{A}}$
+#### Aspect Ratio Normalization Formula:
+The critical current is typically normalized by the device's aspect ratio ($W/L$) to ensure a consistent definition across different device geometries. A common industry standard is to define $I_{crit}$ as:
 
-<p align="center">
-  <img src="docs/figures/threshold_voltage_probes.png" alt="Sentaurus Inspect Threshold Voltage Extraction Probes" width="700"/>
-  <br>
-  <em>Figure 6: Sentaurus Inspect threshold voltage extraction curves probed at target critical currents: L = 100nm (Vth = -0.296V), L = 200nm (Vth = -0.330V), and L = 300nm (Vth = -0.396V / -0.36V).</em>
-</p>
+![Critical Current Formula](docs/figures/equation_icrit_normalization.png)
 
-### Table 2: Extracted Threshold Voltage Comparison
-| Channel Length ($L$) | Aspect Ratio ($W/L$) | Target $I_{crit}$ ($\mu\text{A}$) | Extracted $V_{th}$ ($\text{V}$) | Magnitude $|V_{th}|$ | Scaling Impact |
-| :---: | :---: | :---: | :---: | :---: | :--- |
-| **$300\text{ nm}$** | 3.33 | $0.333\ \mu\text{A}$ | **$-0.396\text{ V}$** | $0.396\text{ V}$ | Long-channel reference baseline |
-| **$200\text{ nm}$** | 5.00 | $0.500\ \mu\text{A}$ | **$-0.330\text{ V}$** | $0.330\text{ V}$ | Moderate threshold shift |
-| **$100\text{ nm}$** | 10.00 | $1.000\ \mu\text{A}$ | **$-0.296\text{ V}$** | $0.296\text{ V}$ | Pronounced $V_{th}$ Roll-Off ($|\Delta V_{th}| = 100\text{ mV}$) |
+$$I_{crit} = 10^{-7}\text{ A} \times \frac{W}{L}$$
 
----
+#### Exact Probing Calculations (from Report Page 7):
+Assuming a normalized device width ($W$) of $1.0\ \mu\text{m}$, the target currents for probing the $I_d - V_{gs}$ curve are calculated as follows:
 
-## Physical Mechanisms Driving Short-Channel Effects (SCE)
+![Calculated Probing Target Currents](docs/figures/calculation_target_currents.png)
 
-As channel length scales from $300\text{ nm}$ to $100\text{ nm}$, the magnitude of $V_{th}$ rolls off by **$100\text{ mV}$** ($V_{th}$ becomes less negative). Two dominant physical mechanisms explain this behavior:
+* **For $L = 100\text{ nm}$ ($0.10\ \mu\text{m}$):**
+  $$I_{crit} = 10^{-7}\text{ A} \times \frac{1\ \mu\text{m}}{0.10\ \mu\text{m}} = 1.0 \times 10^{-6}\text{ A} = \mathbf{1.0\ \mu\text{A}}$$
 
-### 1. Depletion Charge Sharing
-In a long-channel MOSFET, the gate voltage must electrostatically support all bulk depletion charge beneath the gate oxide before an inversion layer can form:
-$$Q_{dep} \propto W \cdot L \cdot \sqrt{2 \epsilon_{si} q N_D \psi_s}$$
-In short-channel devices ($L = 100\text{ nm}$), the depletion boundaries of the reverse-biased source and drain p-n junctions encroach substantially into the channel region. These metallurgical junctions "share" the burden of depleting the channel, reducing the total net depletion charge that must be terminated by the gate electrode. Consequently, a **smaller magnitude gate voltage** is sufficient to trigger inversion, causing $|V_{th}|$ to roll off.
+* **For $L = 200\text{ nm}$ ($0.20\ \mu\text{m}$):**
+  $$I_{crit} = 10^{-7}\text{ A} \times \frac{1\ \mu\text{m}}{0.20\ \mu\text{m}} = 5.0 \times 10^{-7}\text{ A} = \mathbf{0.5\ \mu\text{A}}$$
 
-### 2. Drain-Induced Barrier Lowering (DIBL)
-In sub-micron planar devices, the physical proximity of the drain terminal permits its electric field lines to penetrate deep into the channel region, pulling down the source-to-channel potential barrier for holes. As a result:
-* Holes are injected into the channel at lower gate magnitudes $|V_{gs}|$.
-* The effective threshold voltage decreases as $|V_{ds}|$ increases, causing elevated off-state subthreshold leakage.
+* **For $L = 300\text{ nm}$ ($0.30\ \mu\text{m}$):**
+  $$I_{crit} = 10^{-7}\text{ A} \times \frac{1\ \mu\text{m}}{0.30\ \mu\text{m}} \approx 3.3 \times 10^{-7}\text{ A} = \mathbf{0.33\ \mu\text{A}}$$
+
+These calculated current values align closely with the values at which the curves were probed in the simulation software to extract the $V_{th}$ values presented in Table 2.
+
+#### Comprehensive Calculations Card:
+![Vth Extraction Methodology and Calculations Panel](docs/figures/vth_extraction_calculations_panel.png)
+*Figure 7: Summary card of constant current method formulas, step-by-step arithmetic, target probing currents, and extracted threshold voltages.*
 
 ---
 
-## Automated Python Verification
+### 4.4 Threshold Voltage Comparison & Extraction Curves
 
-A standalone verification script using standard Python libraries validates the constant-current threshold voltage extraction:
+By comparing the transfer characteristics ($I_d - V_{gs}$ plots) for all three devices, a clear trend emerges. The threshold voltage, the gate voltage required to form the inversion channel, decreases in magnitude as the channel length decreases. This phenomenon is known as **$V_{th}$ roll-off**, which is a key short-channel effect (SCE).
 
+### Table 2: Extracted Threshold Voltage for Different Channel Lengths
+| Channel Length ($L$) | Aspect Ratio ($W/L$) | Critical Probing Current ($I_{crit}$) | Extracted Threshold Voltage ($V_{th}$) | Magnitude $|V_{th}|$ |
+| :---: | :---: | :---: | :---: | :---: |
+| **$100\text{ nm}$** | 10.00 | $1.0\ \mu\text{A}$ ($1.0 \times 10^{-6}\text{ A}$) | **$-0.296\text{ V}$** | $0.296\text{ V}$ |
+| **$200\text{ nm}$** | 5.00 | $0.5\ \mu\text{A}$ ($5.0 \times 10^{-7}\text{ A}$) | **$-0.330\text{ V}$** | $0.330\text{ V}$ |
+| **$300\text{ nm}$** | 3.33 | $0.33\ \mu\text{A}$ ($3.3 \times 10^{-7}\text{ A}$) | **$-0.396\text{ V}$** (probed $-0.36\text{ V}$) | $0.396\text{ V}$ |
+
+#### Sentaurus Inspect Probing Extraction Curves (from Report Page 8):
+
+##### 1. Channel Length $L = 100\text{ nm}$ Probing Curve ($V_{th} = -0.296\text{ V}$):
+![100nm Vth Probing Curve](docs/figures/vth_probe_curve_100nm.png)
+*Figure 8A: Sentaurus Inspect probe curve for L = 100nm pMOSFET showing Vth extraction at Icrit = 1.0 uA, yielding Vth = -0.296 V.*
+
+##### 2. Channel Length $L = 200\text{ nm}$ Probing Curve ($V_{th} = -0.330\text{ V}$):
+![200nm Vth Probing Curve](docs/figures/vth_probe_curve_200nm.png)
+*Figure 8B: Sentaurus Inspect probe curve for L = 200nm pMOSFET showing Vth extraction at Icrit = 0.5 uA, yielding Vth = -0.330 V.*
+
+##### 3. Channel Length $L = 300\text{ nm}$ Probing Curve ($V_{th} = -0.360\text{ V}$ / $-0.396\text{ V}$):
+![300nm Vth Probing Curve](docs/figures/vth_probe_curve_300nm.png)
+*Figure 8C: Sentaurus Inspect probe curve for L = 300nm pMOSFET showing Vth extraction at Icrit = 0.33 uA, yielding Vth = -0.360 V / -0.396 V.*
+
+---
+
+### 4.5 Why This Happens: Short-Channel Effects
+
+The decrease in threshold voltage magnitude ($V_{th}$ becoming less negative from $-0.396\text{ V}$ down to $-0.296\text{ V}$) is caused by two fundamental short-channel mechanisms:
+
+#### 1. Depletion Charge Sharing:
+In a short channel (e.g., 100nm), the depletion regions from the source and drain metallurgical junctions (which are now physically very close together) "help" deplete the channel region. The gate electrode no longer has to support all the bulk depletion charge alone. Because the source and drain "share" the depletion charge, a **smaller (less negative) gate voltage** is needed to reach the surface inversion condition. Consequently, the threshold voltage magnitude decreases ($V_{th}$ roll-off).
+
+#### 2. Drain-Induced Barrier Lowering (DIBL):
+* In a short-channel device, the drain contact is situated so close to the source that its lateral electric field can directly penetrate into the channel and lower the potential energy barrier at the source junction.
+* For a pMOSFET, the negative drain voltage ($V_{ds}$) lowers the potential barrier for holes (the majority charge carriers in p-type inversion) trying to enter the channel from the source.
+* This "help" from the drain makes it significantly easier for the channel to invert, effectively reducing the magnitude of the gate voltage ($V_{gs}$) needed to turn the device ON. This effect becomes much stronger as $L$ decreases down to 100nm.
+
+---
+
+## 5. Conclusion
+
+This project successfully demonstrated the design and simulation of a p-channel MOSFET using TCAD tools. The fundamental DC and AC characteristics of a 100nm baseline device were analysed, confirming theoretical operational principles. The voltage-dependent nature of the internal capacitances ($C_{gg}, C_{gs}, C_{gd}, C_{ds}$) was clearly observed.
+
+The analysis of varying the channel length between the devices, while keeping the operating voltages, junction doping concentrations, gate oxide thickness ($10\text{ nm}$), and length of source and drain equal across all devices, was observed. As the channel length of a pMOSFET decreases, its threshold voltage ($V_{th}$) becomes less negative (from $-0.396\text{ V}$ down to $-0.296\text{ V}$). This phenomenon is a primary example of short-channel effects (SCEs).
+
+This result underscores a fundamental trade-off in MOSFET scaling: while shrinking the channel length is key to improving performance and packing density, it also introduces detrimental effects like $V_{th}$ roll-off, which complicates device design and circuit stability. Managing these short-channel effects is a central focus of modern semiconductor technology development.
+
+---
+
+## 6. Verification Scripts & TCAD Decks
+
+All simulation and extraction scripts are included in the `scripts/` directory:
+
+| Script File | Purpose | Description |
+| :--- | :--- | :--- |
+| [`sde_pmos.cmd`](scripts/sde_pmos.cmd) | Structure Generation | Sentaurus Structure Editor Scheme deck defining geometry, meshing, and doping |
+| [`sdevice_pmos.cmd`](scripts/sdevice_pmos.cmd) | TCAD Physics Solve | Sentaurus Device deck with Drift-Diffusion, Lombardi mobility, SRH/Auger models |
+| [`inspect.cmd`](scripts/inspect.cmd) | Inspect Post-Processing | Sentaurus Inspect command file extracting C-V curves and exporting CSV data |
+| [`extract_vth.py`](scripts/extract_vth.py) | Python Verification | Standalone standard library script implementing the Constant Current extraction method |
+| [`generate_circuit_diagram.py`](scripts/generate_circuit_diagram.py) | Circuit Diagram Generator | Generates publication-quality schematic and equivalent capacitance model figures |
+
+### Running the Python Verification Script:
 ```bash
 python3 scripts/extract_vth.py
 ```
 
+**Console Output:**
 ```text
 ============================================================================
  Sub-Micron p-MOSFET Vth Extraction Summary (Constant Current Method)
@@ -235,33 +257,7 @@ Device / Channel   | I_crit Target    | Extracted Vth  | Status
 
 ---
 
-## Repository Structure
-
-```text
-pmos-tcad-characterization/
-├── README.md                          # Comprehensive project documentation
-├── LICENSE                            # MIT Open Source License
-├── docs/
-│   ├── technical_report.md            # Complete formal technical report
-│   └── figures/                       # High-resolution simulation plots & circuits
-│       ├── circuit_schematic.png      # DC/AC testbench & small-signal equivalent circuits
-│       ├── mosfet_2d_structure_mesh.png # 2D mesh & net doping concentration
-│       ├── ac_characteristics_1mhz.png# 1 MHz AC capacitance profiles (Cgg, Cgs, Cgd, Cds)
-│       ├── dc_transfer_output_curves.png # Static Id-Vgs and Id-Vds characteristics
-│       ├── simulation_results_200nm.png # Sentaurus Visual dashboard (L = 200nm)
-│       ├── simulation_results_300nm.png # Sentaurus Visual dashboard (L = 300nm)
-│       └── threshold_voltage_probes.png # Inspect constant current extraction probes
-└── scripts/
-    ├── sde_pmos.cmd                   # Sentaurus Structure Editor 2D meshing deck
-    ├── sdevice_pmos.cmd               # Sentaurus Device DC/AC physics solve deck
-    ├── inspect.cmd                    # Sentaurus Inspect post-processing script
-    ├── extract_vth.py                 # Standalone Python verification script
-    └── generate_circuit_diagram.py    # Generator for high-resolution circuit schematic
-```
-
----
-
-## Author
+## 7. Author
 
 **Nikunj Malik**  
 *Registration Number: 230959134*  
