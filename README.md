@@ -209,7 +209,7 @@ The decrease in threshold voltage magnitude ($V_{th}$ becoming less negative fro
 In a short channel (e.g., 100nm), the depletion regions associated with the source and drain metallurgical junctions (which are physically very close together) encroach significantly into the channel space-charge region. As a result, the gate electrode does not need to support all the bulk depletion charge alone. Because the source and drain junctions "share" in supporting this depletion charge, a **smaller (less negative) gate voltage** is sufficient to reach the surface inversion condition. Consequently, the threshold voltage magnitude decreases ($V_{th}$ roll-off).
 
 #### 2. Drain-Induced Barrier Lowering (DIBL):
-* In a short-channel device, the close proximity of the drain enables its electric field lines to penetrate laterally toward the source and lower the electrostatic potential barrier for carrier injection (holes in pMOS) from the source into the channel.
+* In a short-channel device, the close proximity of the drain enables its electric field lines to penetrate laterally toward the source and lower the electrostatic potential barrier for carrier injection from the source into the channel (in a pMOSFET, inversion-layer holes are minority carriers of the n-type body).
 * This barrier reduction facilitates channel inversion at smaller $|V_{gs}|$ magnitudes, accentuating $V_{th}$ roll-off as channel length scales from 300nm down to 100nm.
 
 > [!NOTE]
@@ -237,14 +237,14 @@ All simulation and extraction scripts are included in the `scripts/` directory:
 | [`scripts/sde_pmos.cmd`](scripts/sde_pmos.cmd) | Structure Generation | Sentaurus Structure Editor Scheme deck defining geometry, meshing, and doping |
 | [`scripts/sdevice_pmos.cmd`](scripts/sdevice_pmos.cmd) | TCAD Physics Solve | Sentaurus Device deck with Drift-Diffusion, Lombardi mobility, SRH/Auger models |
 | [`scripts/inspect.cmd`](scripts/inspect.cmd) | Inspect Post-Processing | Sentaurus Inspect command file extracting C-V curves and exporting CSV data |
-| [`scripts/extract_vth.py`](scripts/extract_vth.py) | Summary & Validation Script | Python utility calculating theoretical $I_{crit}$ values and formatting $V_{th}$ results extracted in Sentaurus Inspect |
+| [`scripts/extract_vth.py`](scripts/extract_vth.py) | Vth Tabulation Utility | Python utility to compute $I_{crit}$ targets ($10^{-7}\text{ A} \times W/L$) and tabulate $V_{th}$ values extracted in Sentaurus Inspect |
 | [`scripts/generate_circuit_diagram.py`](scripts/generate_circuit_diagram.py) | Circuit Diagram Generator | Generates schematic and equivalent capacitance model figures |
 
-### Running the Python Summary & Validation Script:
+### Running the Python Tabulation Utility:
 
 > [!NOTE]
 > **Threshold Extraction Workflow**:
-> The physical extraction of threshold voltages from simulated $I_d-V_{gs}$ characteristics was performed interactively in **Sentaurus Inspect** using the constant current method at target critical currents ($I_{crit}$). The script [`scripts/extract_vth.py`](scripts/extract_vth.py) serves as a standalone verification and formatting utility that calculates theoretical $I_{crit}$ values from aspect ratios and tabulates the inspected $V_{th}$ values. It does not parse raw TCAD simulation files directly.
+> Threshold voltages were extracted in **Sentaurus Inspect** using the constant-current method ($I_{crit} = 10^{-7}\text{ A} \times W/L$): -0.296, -0.330, -0.396 V for 100, 200, 300 nm, showing $V_{th}$ roll-off. The utility [`scripts/extract_vth.py`](scripts/extract_vth.py) computes the $I_{crit}$ targets and tabulates the $V_{th}$ values extracted in Sentaurus Inspect.
 
 ```bash
 python3 scripts/extract_vth.py
@@ -253,14 +253,14 @@ python3 scripts/extract_vth.py
 **Console Output:**
 ```text
 ============================================================================
- Sub-Micron p-MOSFET Vth Extraction Summary (Constant Current Method)
+ Sub-Micron p-MOSFET Vth Summary (Constant Current Method)
  Formula: I_crit = 10^-7 * (W / L)  [A]
 ============================================================================
-Device / Channel   | I_crit Target    | Extracted Vth  | Status
+Device / Channel   | I_crit Target    | Vth from Sentaurus Inspect
 ----------------------------------------------------------------------------
-100nm pMOS         |    1.000 uA       |   -0.296 V     | Validated
-200nm pMOS         |    0.500 uA       |   -0.330 V     | Validated
-300nm pMOS         |    0.333 uA       |   -0.396 V     | Validated
+100nm pMOS         |    1.000 uA       |   -0.296 V
+200nm pMOS         |    0.500 uA       |   -0.330 V
+300nm pMOS         |    0.333 uA       |   -0.396 V
 ============================================================================
 Physical Insights:
 1. As channel length scales from 300nm -> 100nm, |Vth| decreases by ~100mV.
